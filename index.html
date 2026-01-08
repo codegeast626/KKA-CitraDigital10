@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuis Visual Features Kecerdasan Artifisial</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    /* Force landscape orientation message */
+    @media (orientation: portrait) {
+      #rotateMessage {
+        display: flex !important;
+      }
+      #app {
+        display: none !important;
+      }
+    }
+    
+    @media (orientation: landscape) {
+      #rotateMessage {
+        display: none !important;
+      }
+      #app {
+        display: block !important;
+      }
+    }
+    
+    @keyframes pulse-correct {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .animate-correct {
+      animation: pulse-correct 0.5s ease-in-out;
+    }
+    
+    .animate-wrong {
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    .animate-slide-up {
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 50%, #45B7D1 100%);
+    }
+    
+    .timer-warning {
+      animation: pulse-correct 0.5s ease-in-out infinite;
+    }
+
+    .checkbox-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox-option input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .match-item {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .matching-left-item {
+      min-height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .matching-right-item {
+      min-height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .virtual-keyboard {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      padding: 12px;
+      background-color: #e2e8f0;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    .keyboard-key {
+      padding: 12px 8px;
+      background-color: #ffffff;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .keyboard-key:hover {
+      background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+      color: #ffffff;
+      border-color: #4ECDC4;
+      transform: scale(1.05);
+    }
+
+    .keyboard-key:active {
+      transform: scale(0.95);
+    }
+
+    .keyboard-key.key-space {
+      grid-column: span 4;
+    }
+
+    .keyboard-key.key-backspace {
+      grid-column: span 2;
+      background-color: #f56565;
+      color: #ffffff;
+      border-color: #f56565;
+    }
+
+    .keyboard-key.key-backspace:hover {
+      background-color: #e53e3e;
+    }
+
+    .keyboard-key.key-clear {
+      grid-column: span 2;
+      background-color: #ed8936;
+      color: #ffffff;
+      border-color: #ed8936;
+    }
+
+    .keyboard-key.key-clear:hover {
+      background-color: #dd6b20;
+    }
+
+    @media (max-width: 768px) {
+      .virtual-keyboard {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 4px;
+        padding: 8px;
+      }
+      
+      .keyboard-key {
+        padding: 10px 4px;
+        font-size: 12px;
+      }
+    }
+
+    .matching-left-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .matching-right-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .matching-left-item.selected {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    #matchingCanvas {
+      pointer-events: none;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full"><!-- Rotate Message for Portrait Mode -->
+  <div id="rotateMessage" class="hidden fixed inset-0 flex-col items-center justify-center p-8 gradient-bg" style="z-index: 9999;">
+   <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md text-center animate-fade-in">
+    <div class="text-6xl mb-4 animate-pulse">
+     📱➡️💻
+    </div>
+    <h2 class="text-2xl font-bold mb-3" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Rotasi Layar</h2>
+    <p class="text-base mb-2" style="color: #2d3748;">Aplikasi ini dirancang untuk layar landscape.</p>
+    <p class="text-base font-semibold" style="color: #FF6B6B;">Silakan putar perangkat Anda ke orientasi landscape untuk pengalaman terbaik.</p>
+   </div>
+  </div>
+  <div id="app" class="h-full w-full gradient-bg overflow-auto"><!-- Intro Screen -->
+   <div id="introScreen" class="h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-5xl w-full text-center animate-fade-in">
+     <div class="mb-4">
+      <div class="text-5xl mb-3">
+       🤖
+      </div>
+      <h1 id="gameTitle" class="text-3xl font-bold mb-3" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Kuis <em>Visual Features</em> Kecerdasan Artifisial</h1>
+     </div>
+     <div class="mb-6 p-5 rounded-2xl" style="background-color: #f7fafc;">
+      <h2 class="text-2xl font-bold mb-3 text-center" style="color: #FF6B6B;">Uji Kemampuanmu Mengenali Ciri Visual Kecerdasan Artifisial!</h2>
+      <div class="mb-4 text-left space-y-3">
+       <p class="text-base leading-relaxed" style="color: #2d3748;">Kecerdasan artifisial mampu mengenali objek, warna, bentuk, dan pola dari gambar melalui <strong>ciri visual (<em>visual features</em>)</strong>. Ciri-ciri inilah yang digunakan untuk membedakan satu objek dengan objek lainnya.</p>
+       <p class="text-base leading-relaxed" style="color: #2d3748;">Dalam kuis ini, kamu akan menguji pemahaman tentang cara kecerdasan artifisial "melihat" dan memproses informasi visual. Perhatikan setiap gambar dengan seksama karena detail kecil, seperti warna, tekstur, dan bentuk sangat berperan dalam pengambilan keputusan oleh sistem kecerdasan artifisial.</p>
+       <p class="text-base leading-relaxed font-semibold" style="color: #FF6B6B;">Siapkan fokusmu dan buktikan bahwa kamu memahami cara kecerdasan artifisial mengenali ciri visual!</p>
+      </div>
+     </div><button id="toInstructionsBtn" class="w-full text-white text-lg font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);"> Lanjut ke Cara Bermain </button>
+    </div>
+   </div><!-- Instructions Screen -->
+   <div id="instructionsScreen" class="hidden h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-5xl w-full text-center animate-fade-in">
+     <div class="mb-4">
+      <div class="text-5xl mb-3">
+       📋
+      </div>
+      <h1 class="text-3xl font-bold mb-3" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Cara Bermain</h1>
+      <p class="text-lg mb-4" style="color: #4a5568;">Pahami aturan permainan sebelum memulai!</p>
+     </div>
+     <div class="mb-6 p-5 rounded-2xl" style="background: linear-gradient(135deg, #FFE5E5 0%, #E0F7FA 100%);">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+       <div class="flex items-start p-3 rounded-xl" style="background-color: #ffffff;"><span class="mr-3 text-2xl">⏱️</span>
+        <div>
+         <p class="font-bold mb-1" style="color: #2d3748;">Batasan Waktu</p>
+         <p class="text-sm" style="color: #4a5568;">Jawab setiap soal dalam waktu yang ditentukan. Semakin cepat, semakin tinggi bonusnya!</p>
+        </div>
+       </div>
+       <div class="flex items-start p-3 rounded-xl" style="background-color: #ffffff;"><span class="mr-3 text-2xl">🎯</span>
+        <div>
+         <p class="font-bold mb-1" style="color: #2d3748;">Variasi Soal</p>
+         <p class="text-sm" style="color: #4a5568;">Berbagai jenis soal: pilihan ganda, <em>multiple choice</em>, isian, benar/salah, dan menjodohkan.</p>
+        </div>
+       </div>
+       <div class="flex items-start p-3 rounded-xl" style="background-color: #ffffff;"><span class="mr-3 text-2xl">⚡</span>
+        <div>
+         <p class="font-bold mb-1" style="color: #2d3748;">Sistem Skor</p>
+         <p class="text-sm" style="color: #4a5568;">Setiap jawaban benar mendapat 10 poin. Skor maksimal 100 poin!</p>
+        </div>
+       </div>
+       <div class="flex items-start p-3 rounded-xl" style="background-color: #ffffff;"><span class="mr-3 text-2xl">🔄</span>
+        <div>
+         <p class="font-bold mb-1" style="color: #2d3748;">Soal Unik</p>
+         <p class="text-sm" style="color: #4a5568;">Setiap pemain mendapat soal yang berbeda berdasarkan nama mereka!</p>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="mb-6 p-4 rounded-2xl" style="background-color: #fef3c7;">
+      <p class="text-sm font-semibold" style="color: #78350f;">💡 <strong>Tips:</strong> Baca setiap soal dengan teliti dan perhatikan detail visual dengan seksama!</p>
+     </div>
+     <form id="nameForm" class="mb-4"><label for="playerName" class="sr-only">Nama Pemain</label> <input type="text" id="playerName" placeholder="Masukkan nama kamu..." class="w-full px-5 py-3 text-base border-2 rounded-xl mb-3 focus:outline-none focus:border-purple-500" style="border-color: #cbd5e0;" required readonly> <!-- Virtual Keyboard for Name Input -->
+      <div class="virtual-keyboard" id="nameKeyboard"><button type="button" class="keyboard-key" data-key="A">A</button> <button type="button" class="keyboard-key" data-key="B">B</button> <button type="button" class="keyboard-key" data-key="C">C</button> <button type="button" class="keyboard-key" data-key="D">D</button> <button type="button" class="keyboard-key" data-key="E">E</button> <button type="button" class="keyboard-key" data-key="F">F</button> <button type="button" class="keyboard-key" data-key="G">G</button> <button type="button" class="keyboard-key" data-key="H">H</button> <button type="button" class="keyboard-key" data-key="I">I</button> <button type="button" class="keyboard-key" data-key="J">J</button> <button type="button" class="keyboard-key" data-key="K">K</button> <button type="button" class="keyboard-key" data-key="L">L</button> <button type="button" class="keyboard-key" data-key="M">M</button> <button type="button" class="keyboard-key" data-key="N">N</button> <button type="button" class="keyboard-key" data-key="O">O</button> <button type="button" class="keyboard-key" data-key="P">P</button> <button type="button" class="keyboard-key" data-key="Q">Q</button> <button type="button" class="keyboard-key" data-key="R">R</button> <button type="button" class="keyboard-key" data-key="S">S</button> <button type="button" class="keyboard-key" data-key="T">T</button> <button type="button" class="keyboard-key" data-key="U">U</button> <button type="button" class="keyboard-key" data-key="V">V</button> <button type="button" class="keyboard-key" data-key="W">W</button> <button type="button" class="keyboard-key" data-key="X">X</button> <button type="button" class="keyboard-key" data-key="Y">Y</button> <button type="button" class="keyboard-key" data-key="Z">Z</button> <button type="button" class="keyboard-key key-space" data-key=" ">SPASI</button> <button type="button" class="keyboard-key key-backspace" data-key="BACKSPACE">⌫ HAPUS</button> <button type="button" class="keyboard-key key-clear" data-key="CLEAR">🗑️ BERSIHKAN</button>
+      </div><button type="submit" id="startButton" class="w-full mt-3 text-white text-lg font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);"> Mulai Kuis </button>
+     </form>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="gameScreen" class="hidden h-full p-4">
+    <div class="max-w-6xl mx-auto h-full flex flex-col"><!-- Header -->
+     <header class="bg-white rounded-2xl shadow-lg p-4 mb-4 animate-slide-up">
+      <div class="flex justify-between items-center flex-wrap gap-3">
+       <div>
+        <h2 class="text-xl font-bold" style="color: #2d3748;" id="playerNameDisplay"></h2>
+        <p class="text-base" style="color: #718096;"><em>Level</em> <span id="currentLevel">1</span> • <span id="questionType">Pilihan Ganda</span></p>
+       </div>
+       <div class="flex gap-6">
+        <div class="text-center">
+         <p class="text-xs font-semibold" style="color: #718096;">Skor</p>
+         <p class="text-2xl font-bold" style="color: #FF6B6B;" id="scoreDisplay">0</p>
+        </div>
+        <div class="text-center">
+         <p class="text-xs font-semibold" style="color: #718096;">Soal</p>
+         <p class="text-2xl font-bold" style="color: #4ECDC4;"><span id="currentQuestion">1</span>/10</p>
+        </div>
+       </div>
+      </div>
+     </header><!-- Question Card -->
+     <main class="bg-white rounded-2xl shadow-lg p-5 mb-4 flex-grow animate-slide-up overflow-auto"><!-- Timer -->
+      <div class="mb-4">
+       <div class="flex justify-between items-center mb-2"><span class="font-semibold text-sm" style="color: #4a5568;" id="timerLabel">Waktu</span> <span class="text-xl font-bold" style="color: #45B7D1;" id="timer">20</span>
+       </div>
+       <div class="w-full h-2 rounded-full" style="background-color: #e2e8f0;">
+        <div id="timerBar" class="h-full rounded-full transition-all duration-1000" style="background: linear-gradient(90deg, #4ECDC4 0%, #45B7D1 100%); width: 100%;"></div>
+       </div>
+      </div><!-- Question -->
+      <div class="mb-5">
+       <h3 class="text-xl font-bold mb-4" style="color: #2d3748;" id="questionText"></h3><!-- Image Display -->
+       <div class="mb-4 flex justify-center" id="imageContainer">
+        <div class="w-48 h-48 rounded-2xl flex items-center justify-center text-5xl" style="background-color: #f7fafc;" id="objectDisplay"></div>
+       </div>
+      </div><!-- Dynamic Content Area -->
+      <div id="contentArea"></div><!-- Submit Button (for certain question types) --> <button id="submitBtn" class="hidden w-full text-white text-base font-bold py-3 px-6 rounded-xl shadow-lg mt-4 transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);"> Kirim Jawaban </button> <!-- Feedback -->
+      <div id="feedback" class="hidden mt-4 p-4 rounded-2xl">
+       <p class="text-lg font-bold mb-2" id="feedbackTitle"></p>
+       <p class="text-base" id="feedbackText"></p>
+      </div>
+     </main>
+    </div>
+   </div><!-- Game Over Modal -->
+   <div id="gameOverModal" class="hidden fixed inset-0 flex items-center justify-center p-4" style="background-color: rgba(0, 0, 0, 0.7); z-index: 1000;">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
+     <div class="text-center">
+      <div class="text-6xl mb-4">
+       ⏰
+      </div>
+      <h2 class="text-3xl font-bold mb-3" style="color: #f56565;">Time Over!</h2>
+      <p class="text-lg mb-6" style="color: #2d3748;">Waktu habis! Kamu tidak sempat menjawab soal ini.</p><button id="continueBtn" class="w-full text-white text-lg font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);"> Lanjut ke Soal Berikutnya </button>
+     </div>
+    </div>
+   </div><!-- Results Screen -->
+   <div id="resultsScreen" class="hidden h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-5xl w-full animate-fade-in">
+     <div class="text-center mb-6">
+      <div class="text-5xl mb-3" id="resultEmoji">
+       🎉
+      </div>
+      <h2 class="text-3xl font-bold mb-3" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Selesai!</h2>
+      <p class="text-xl font-bold mb-2" style="color: #2d3748;" id="finalPlayerName"></p>
+     </div>
+     <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="text-center p-4 rounded-2xl" style="background-color: #f7fafc;">
+       <p class="text-base font-semibold mb-2" style="color: #718096;">Skor Akhir</p>
+       <p class="text-3xl font-bold" style="color: #FF6B6B;" id="finalScore">0</p>
+      </div>
+      <div class="text-center p-4 rounded-2xl" style="background-color: #f7fafc;">
+       <p class="text-base font-semibold mb-2" style="color: #718096;">Akurasi</p>
+       <p class="text-3xl font-bold" style="color: #4ECDC4;" id="finalAccuracy">0%</p>
+      </div>
+      <div class="text-center p-4 rounded-2xl" style="background-color: #f7fafc;">
+       <p class="text-base font-semibold mb-2" style="color: #718096;">Waktu Rata-rata</p>
+       <p class="text-3xl font-bold" style="color: #45B7D1;" id="finalAvgTime">0s</p>
+      </div>
+     </div><button id="viewLeaderboardBtn" class="w-full text-white text-lg font-bold py-3 px-6 rounded-xl shadow-lg mb-3 transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);"> Lihat Leaderboard </button> <button id="playAgainBtn" class="w-full text-lg font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl" style="background-color: #e2e8f0; color: #2d3748;"> Main Lagi </button>
+    </div>
+   </div><!-- Leaderboard Screen -->
+   <div id="leaderboardScreen" class="hidden h-full p-4 overflow-auto">
+    <div class="max-w-5xl mx-auto animate-fade-in">
+     <div class="bg-white rounded-3xl shadow-2xl p-6 mb-4">
+      <h2 class="text-3xl font-bold text-center mb-6" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">🏆 Leaderboard Kelas</h2>
+      <div id="leaderboardList" class="space-y-3">
+      </div><button id="backToResultsBtn" class="w-full mt-6 text-white text-lg font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105" style="background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);"> Kembali </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Sound Effects using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      if (type === 'start') {
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else if (type === 'correct') {
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+        oscillator.frequency.setValueAtTime(1046.50, audioContext.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } else if (type === 'wrong') {
+        oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(250, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else if (type === 'finish') {
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15);
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3);
+        oscillator.frequency.setValueAtTime(1046.50, audioContext.currentTime + 0.45);
+        oscillator.frequency.setValueAtTime(1318.51, audioContext.currentTime + 0.6);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.8);
+      } else if (type === 'click') {
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.05);
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } else if (type === 'tick') {
+        oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.05);
+      }
+    }
+
+    // Question Bank - Various types
+    const questionBank = {
+      // Multiple Choice (Single Answer)
+      multipleChoice: [
+        {
+          level: 1,
+          type: "multipleChoice",
+          typeName: "Pilihan Ganda",
+          question: "Dalam <em>computer vision</em>, <em>visual features</em> utama yang digunakan kecerdasan artifisial untuk membedakan apel merah dan apel hijau adalah?",
+          object: "🍎🍏",
+          options: ["Nilai <em>RGB</em> (warna)", "Geometri bentuk", "Dimensi ukuran", "<em>Texture pattern</em>"],
+          correct: 0,
+          explanation: "Sistem <em>computer vision</em> menggunakan nilai <em>RGB</em> sebagai <em>feature</em> utama karena bentuk dan ukuran kedua apel identik, hanya distribusi warna yang berbeda signifikan dalam <em>color space</em>.",
+          timer: 20
+        },
+        {
+          level: 1,
+          type: "multipleChoice",
+          typeName: "Pilihan Ganda",
+          question: "Algoritma <em>feature extraction</em> untuk membedakan bola basket dan bola sepak terutama menganalisis?",
+          object: "🏀⚽",
+          options: ["<em>Color histogram</em> dan <em>texture pattern</em>", "Diameter objek", "Bentuk bulat", "Intensitas cahaya"],
+          correct: 0,
+          explanation: "Kecerdasan buatan mengekstrak <em>texture features</em> berupa pola garis paralel pada bola basket dan pola <em>pentagon-hexagon tiling</em> pada bola sepak, dikombinasikan dengan analisis <em>color histogram</em>.",
+          timer: 20
+        },
+        {
+          level: 2,
+          type: "multipleChoice",
+          typeName: "Pilihan Ganda",
+          question: "Model <em>deep learning</em> untuk klasifikasi kendaraan menggunakan kombinasi fitur apa untuk membedakan mobil <em>sport</em> dan SUV?",
+          object: "🏎️🚙",
+          options: ["<em>Edge detection</em> dan rasio aspek", "Kanal warna dominan", "Diameter roda", "<em>Pixel count</em>"],
+          correct: 0,
+          explanation: "CNN menggunakan <em>edge detection</em> (algoritma Canny/Sobel) untuk mendeteksi profil aerodinamis rendah mobil <em>sport</em> versus profil tinggi SUV, dikombinasikan dengan analisis rasio tinggi-lebar sebagai <em>geometric feature</em>.",
+          timer: 20
+        },
+        {
+          level: 2,
+          type: "multipleChoice",
+          typeName: "Pilihan Ganda",
+          question: "Algoritma <em>object detection</em> membedakan kucing dan anjing dengan mengekstrak fitur visual berupa?",
+          object: "🐱🐶",
+          options: ["<em>Facial landmark points</em> dan proporsi anatomi", "Panjang bulu", "Ukuran mata", "Panjang ekor"],
+          correct: 0,
+          explanation: "Model CNN mendeteksi <em>key points</em> seperti posisi telinga, panjang moncong, dan rasio lebar-tinggi wajah. Kucing memiliki <em>facial structure</em> bulat dengan telinga segitiga, sedangkan anjing memiliki moncong memanjang dengan variasi bentuk telinga.",
+          timer: 20
+        },
+        {
+          level: 3,
+          type: "multipleChoice",
+          typeName: "Pilihan Ganda",
+          question: "Tantangan utama model CNN dalam klasifikasi <em>emoji</em> wajah dengan ekspresi serupa terletak pada?",
+          object: "😊😀",
+          options: ["Deteksi <em>micro-features</em> dengan resolusi tinggi", "Nilai <em>RGB</em> kulit", "Diameter kepala", "Bentuk lingkaran luar"],
+          correct: 0,
+          explanation: "Perbedaan <em>pixel-level</em> yang sangat halus seperti derajat kelengkungan mata atau lebar senyum memerlukan <em>high-resolution feature maps</em> dan <em>attention mechanism</em>, menunjukkan pentingnya <em>fine-grained classification</em> dalam <em>deep learning</em>.",
+          timer: 20
+        }
+      ],
+
+      // Multiple Choice Multiple Answer (MCMA)
+      mcma: [
+        {
+          level: 1,
+          type: "mcma",
+          typeName: "Pilihan Ganda Kompleks",
+          question: "Fitur visual apa saja yang dapat digunakan kecerdasan buatan untuk membedakan buah jeruk dan apel? (Pilihlah jawaban yang benar)",
+          object: "🍊🍎",
+          options: [
+            "Warna dominan (<em>orange</em> vs merah)",
+            "<em>Texture</em> kulit (kasar vs halus)",
+            "Bentuk (bulat sempurna vs oval)",
+            "Ukuran diameter"
+          ],
+          correct: [0, 1],
+          explanation: "Kecerdasan buatan menggunakan warna dominan dan tekstur permukaan kulit sebagai fitur pembeda utama. Bentuk keduanya relatif bulat dan ukuran dapat bervariasi, sehingga kurang <em>discriminative</em>.",
+          timer: 25
+        },
+        {
+          level: 2,
+          type: "mcma",
+          typeName: "Pilihan Ganda Kompleks",
+          question: "Dalam sistem <em>face recognition</em>, fitur wajah apa saja yang diekstrak oleh algoritma? (Pilihlah jawaban yang benar)",
+          object: "👤",
+          options: [
+            "Jarak antarmata (<em>inter-pupillary distance</em>)",
+            "Bentuk rahang dan dagu",
+            "Warna rambut",
+            "Proporsi hidung dan mulut"
+          ],
+          correct: [0, 1, 3],
+          explanation: "Sistem <em>face recognition</em> mengekstrak <em>geometric features</em> seperti jarak antarmata, bentuk rahang, dan proporsi hidung-mulut. Warna rambut mudah berubah sehingga bukan fitur yang <em>reliable</em>.",
+          timer: 25
+        },
+        {
+          level: 3,
+          type: "mcma",
+          typeName: "Pilihan Ganda Kompleks",
+          question: "Metode <em>feature extraction</em> apa saja yang umum digunakan dalam <em>computer vision</em>? (Pilihlah jawaban yang benar)",
+          object: "🔍",
+          options: [
+            "<em>SIFT (Scale-Invariant Feature Transform)</em>",
+            "<em>HOG (Histogram of Oriented Gradients)</em>",
+            "<em>RGB Color Model</em>",
+            "<em>LBP (Local Binary Patterns)</em>"
+          ],
+          correct: [0, 1, 3],
+          explanation: "SIFT, HOG, dan LBP adalah algoritma <em>feature extraction</em> yang terkenal. <em>RGB Color Model</em> adalah <em>color space</em>, bukan metode ekstraksi fitur.",
+          timer: 30
+        }
+      ],
+
+      // Fill in the Blank
+      fillBlank: [
+        {
+          level: 1,
+          type: "fillBlank",
+          typeName: "Isian",
+          question: "Proses ekstraksi ciri visual dari gambar dalam kecerdasan buatan disebut ___.",
+          object: "����",
+          answer: ["feature extraction", "ekstraksi fitur", "feature", "fitur"],
+          explanation: "<em>Feature extraction</em> adalah proses mengidentifikasi dan mengekstrak informasi penting dari data visual untuk digunakan dalam analisis lebih lanjut.",
+          timer: 20
+        },
+        {
+          level: 1,
+          type: "fillBlank",
+          typeName: "Isian",
+          question: "Model <em>deep learning</em> yang dirancang khusus untuk memproses data visual disebut ___.",
+          object: "🧠",
+          answer: ["cnn", "convolutional neural network", "convnet", "convolutional"],
+          explanation: "<em>Convolutional Neural Network</em> (CNN) adalah arsitektur <em>neural network</em> yang dirancang khusus untuk data visual dengan menggunakan operasi konvolusi.",
+          timer: 20
+        },
+        {
+          level: 2,
+          type: "fillBlank",
+          typeName: "Isian",
+          question: "Algoritma yang mendeteksi tepi objek dalam gambar disebut ___.",
+          object: "🖼️",
+          answer: ["edge detection", "deteksi tepi", "edge", "canny", "sobel"],
+          explanation: "<em>Edge detection</em> adalah teknik untuk mengidentifikasi titik-titik di mana <em>brightness</em> gambar berubah tajam, algoritma populer termasuk Canny dan Sobel.",
+          timer: 20
+        },
+        {
+          level: 3,
+          type: "fillBlank",
+          typeName: "Isian",
+          question: "Teknik melatih model kecerdasan buatan menggunakan model yang sudah terlatih sebelumnya disebut ___.",
+          object: "🔄",
+          answer: ["transfer learning", "transfer", "pembelajaran transfer"],
+          explanation: "<em>Transfer learning</em> adalah teknik menggunakan pengetahuan dari model yang sudah dilatih pada <em>dataset</em> besar untuk tugas baru yang serupa.",
+          timer: 25
+        }
+      ],
+
+      // True/False
+      trueFalse: [
+        {
+          level: 1,
+          type: "trueFalse",
+          typeName: "Benar/Salah",
+          question: "Sistem <em>computer vision</em> hanya dapat mengenali objek dalam kondisi pencahayaan ideal.",
+          object: "💡",
+          answer: false,
+          explanation: "SALAH. Sistem <em>computer vision</em> modern dapat mengenali objek dalam berbagai kondisi pencahayaan menggunakan teknik <em>data augmentation</em> dan <em>normalization</em>.",
+          timer: 15
+        },
+        {
+          level: 1,
+          type: "trueFalse",
+          typeName: "Benar/Salah",
+          question: "Warna adalah satu-satunya fitur visual yang digunakan kecerdasan buatan untuk mengenali objek.",
+          object: "🎨",
+          answer: false,
+          explanation: "SALAH. Kecerdasan buatan menggunakan berbagai fitur visual seperti bentuk, tekstur, tepi, pola, dan warna untuk mengenali objek secara lebih akurat.",
+          timer: 15
+        },
+        {
+          level: 2,
+          type: "trueFalse",
+          typeName: "Benar/Salah",
+          question: "CNN (<em>Convolutional Neural Network</em>) menggunakan <em>filter</em> untuk mengekstrak fitur dari gambar.",
+          object: "🔬",
+          answer: true,
+          explanation: "BENAR. CNN menggunakan <em>convolutional filters</em> atau <em>kernels</em> yang bergerak di atas gambar untuk mengekstrak berbagai fitur seperti tepi, tekstur, dan pola.",
+          timer: 15
+        },
+        {
+          level: 2,
+          type: "trueFalse",
+          typeName: "Benar/Salah",
+          question: "Model kecerdasan buatan dapat mencapai akurasi 100% dalam mengenali objek.",
+          object: "🎯",
+          answer: false,
+          explanation: "SALAH. Tidak ada model kecerdasan buatan yang mencapai akurasi 100% karena selalu ada <em>ambiguity</em>, <em>occlusion</em>, dan variasi dalam data visual <em>real-world</em>.",
+          timer: 15
+        },
+        {
+          level: 3,
+          type: "trueFalse",
+          typeName: "Benar/Salah",
+          question: "<em>Data augmentation</em> dapat meningkatkan kemampuan model kecerdasan buatan dalam mengenali objek dari berbagai sudut pandang.",
+          object: "🔄",
+          answer: true,
+          explanation: "BENAR. <em>Data augmentation</em> (rotasi, <em>flipping</em>, <em>scaling</em>) melatih model dengan variasi gambar yang lebih beragam, meningkatkan kemampuan generalisasi.",
+          timer: 15
+        }
+      ],
+
+      // Matching
+      matching: [
+        {
+          level: 2,
+          type: "matching",
+          typeName: "Menjodohkan",
+          question: "Cocokkan fitur visual dengan contoh penerapannya dalam kecerdasan artifisial.",
+          object: "🎯",
+          pairs: [
+            { left: "Warna", right: "Membedakan apel merah dan hijau." },
+            { left: "Tekstur", right: "Membedakan kayu dan logam." },
+            { left: "Bentuk", right: "Membedakan segitiga dan lingkaran." },
+            { left: "Ukuran", right: "Membedakan mobil dan sepeda." },
+            { left: "Pola", right: "Mengenali sidik jari." }
+          ],
+          distractors: [
+            "Mengukur suhu objek.",
+            "Mendeteksi aroma bunga."
+          ],
+          explanation: "Fitur visual seperti warna, tekstur, bentuk, ukuran, dan pola adalah komponen utama yang digunakan kecerdasan artifisial untuk analisis gambar. Suhu dan aroma bukan fitur visual.",
+          timer: 35
+        },
+        {
+          level: 3,
+          type: "matching",
+          typeName: "Menjodohkan",
+          question: "Cocokkan istilah kecerdasan artifisial dengan definisinya.",
+          object: "📚",
+          pairs: [
+            { left: "<em>Dataset</em>", right: "Kumpulan data untuk melatih AI." },
+            { left: "<em>Training</em>", right: "Proses melatih model AI." },
+            { left: "<em>Akurasi</em>", right: "Tingkat ketepatan model AI." },
+            { left: "<em>Overfitting</em>", right: "Model terlalu cocok dengan data latih." },
+            { left: "<em>Validation</em>", right: "Proses menguji performa model." }
+          ],
+          distractors: [
+            "Kecepatan internet yang dibutuhkan.",
+            "Jumlah programmer yang terlibat."
+          ],
+          explanation: "<em>Dataset, training, akurasi, overfitting,</em> dan <em>validation</em> adalah konsep fundamental dalam <em>machine learning</em>. Kecepatan internet dan jumlah programmer bukan istilah teknis kecerdasan artifisial.",
+          timer: 35
+        }
+      ]
+    };
+
+    // Game state
+    let currentPlayer = "";
+    let currentQuestionIndex = 0;
+    let selectedQuestions = [];
+    let score = 0;
+    let correctAnswers = 0;
+    let totalTime = 0;
+    let timerInterval = null;
+    let timeLeft = 20;
+    let questionStartTime = 0;
+    let isAnswered = false;
+    let currentAnswer = null;
+
+    // Shuffle array
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    // Generate unique seed based on player name (deterministic)
+    function generateSeed(playerName) {
+      let hash = 0;
+      const name = playerName.toLowerCase().trim();
+      
+      // Create a stable hash from player name
+      for (let i = 0; i < name.length; i++) {
+        const char = name.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      // Return absolute value to ensure positive seed
+      return Math.abs(hash);
+    }
+
+    // Seeded random number generator (deterministic)
+    function seededRandom(seed) {
+      // Linear Congruential Generator for deterministic randomness
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    }
+
+    // Shuffle array with seed (deterministic)
+    function shuffleWithSeed(array, baseSeed) {
+      const newArray = [...array];
+      let seed = baseSeed;
+      
+      for (let i = newArray.length - 1; i > 0; i--) {
+        seed = (seed * 9301 + 49297) % 233280;
+        const j = Math.floor((seed / 233280) * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    // Select random questions with unique seed based on player name
+    function selectRandomQuestions(playerName) {
+      selectedQuestions = [];
+      const baseSeed = generateSeed(playerName);
+      
+      // Each player gets unique question selection based on their name
+      // Get 3 multiple choice
+      const mc = shuffleWithSeed(questionBank.multipleChoice, baseSeed * 1).slice(0, 3);
+      selectedQuestions.push(...mc);
+      
+      // Get 2 MCMA
+      const mcma = shuffleWithSeed(questionBank.mcma, baseSeed * 2).slice(0, 2);
+      selectedQuestions.push(...mcma);
+      
+      // Get 2 fill blank
+      const fb = shuffleWithSeed(questionBank.fillBlank, baseSeed * 3).slice(0, 2);
+      selectedQuestions.push(...fb);
+      
+      // Get 2 true/false
+      const tf = shuffleWithSeed(questionBank.trueFalse, baseSeed * 4).slice(0, 2);
+      selectedQuestions.push(...tf);
+      
+      // Get 1 matching
+      const match = shuffleWithSeed(questionBank.matching, baseSeed * 5).slice(0, 1);
+      selectedQuestions.push(...match);
+      
+      // Shuffle final question order uniquely for each player
+      selectedQuestions = shuffleWithSeed(selectedQuestions, baseSeed * 6);
+      
+      // Shuffle options for multiple choice questions
+      selectedQuestions.forEach((q, idx) => {
+        if (q.type === 'multipleChoice' && q.options) {
+          const correctAnswer = q.options[q.correct];
+          const shuffledOptions = shuffleWithSeed(q.options, baseSeed * (7 + idx));
+          q.options = shuffledOptions;
+          q.correct = shuffledOptions.indexOf(correctAnswer);
+        } else if (q.type === 'mcma' && q.options) {
+          const correctAnswers = q.correct.map(i => q.options[i]);
+          const shuffledOptions = shuffleWithSeed(q.options, baseSeed * (7 + idx));
+          q.options = shuffledOptions;
+          q.correct = correctAnswers.map(ans => shuffledOptions.indexOf(ans));
+        }
+      });
+    }
+
+    // Navigate from intro to instructions
+    document.getElementById('toInstructionsBtn').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('introScreen').classList.add('hidden');
+      document.getElementById('instructionsScreen').classList.remove('hidden');
+    });
+
+    // Virtual Keyboard for Name Input
+    const nameInput = document.getElementById('playerName');
+    const nameKeyboard = document.getElementById('nameKeyboard');
+    
+    nameKeyboard.addEventListener('click', (e) => {
+      if (e.target.classList.contains('keyboard-key')) {
+        playSound('click');
+        const key = e.target.dataset.key;
+        
+        if (key === 'BACKSPACE') {
+          nameInput.value = nameInput.value.slice(0, -1);
+        } else if (key === 'CLEAR') {
+          nameInput.value = '';
+        } else {
+          nameInput.value += key;
+        }
+      }
+    });
+
+    // Start game
+    document.getElementById('nameForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      currentPlayer = document.getElementById('playerName').value.trim();
+      if (currentPlayer) {
+        playSound('start');
+        selectRandomQuestions(currentPlayer);
+        document.getElementById('playerNameDisplay').textContent = currentPlayer;
+        document.getElementById('instructionsScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        startQuestion();
+      }
+    });
+
+    // Start question
+    function startQuestion() {
+      if (currentQuestionIndex >= selectedQuestions.length) {
+        endGame();
+        return;
+      }
+
+      isAnswered = false;
+      currentAnswer = null;
+      const question = selectedQuestions[currentQuestionIndex];
+      
+      document.getElementById('currentLevel').textContent = question.level;
+      document.getElementById('questionType').textContent = question.typeName;
+      document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+      document.getElementById('questionText').innerHTML = question.question;
+      document.getElementById('objectDisplay').textContent = question.object;
+      document.getElementById('feedback').classList.add('hidden');
+      document.getElementById('submitBtn').classList.add('hidden');
+
+      // Render question based on type
+      const contentArea = document.getElementById('contentArea');
+      contentArea.innerHTML = '';
+
+      switch(question.type) {
+        case 'multipleChoice':
+          renderMultipleChoice(question, contentArea);
+          break;
+        case 'mcma':
+          renderMCMA(question, contentArea);
+          break;
+        case 'fillBlank':
+          renderFillBlank(question, contentArea);
+          break;
+        case 'trueFalse':
+          renderTrueFalse(question, contentArea);
+          break;
+        case 'matching':
+          renderMatching(question, contentArea);
+          break;
+      }
+
+      // Start timer
+      timeLeft = question.timer;
+      questionStartTime = Date.now();
+      document.getElementById('timer').textContent = timeLeft;
+      document.getElementById('timerBar').style.width = '100%';
+      document.getElementById('timerBar').classList.remove('timer-warning');
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => updateTimer(question.timer), 1000);
+    }
+
+    // Render Multiple Choice
+    function renderMultipleChoice(question, container) {
+      const optionsDiv = document.createElement('div');
+      optionsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+      
+      question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'p-4 rounded-xl text-base font-semibold transition-all duration-300 hover:shadow-lg';
+        button.style.backgroundColor = '#f7fafc';
+        button.style.color = '#2d3748';
+        button.innerHTML = option;
+        button.onclick = () => checkMultipleChoice(index, question);
+        optionsDiv.appendChild(button);
+      });
+      
+      container.appendChild(optionsDiv);
+    }
+
+    // Render MCMA
+    function renderMCMA(question, container) {
+      const instructionDiv = document.createElement('div');
+      instructionDiv.className = 'mb-3 p-3 rounded-xl';
+      instructionDiv.style.background = 'linear-gradient(135deg, #FFE5E5 0%, #E0F7FA 100%)';
+      instructionDiv.innerHTML = '<p class="text-xs font-semibold" style="color: #FF6B6B;">Pilih lebih dari satu jawaban yang benar</p>';
+      container.appendChild(instructionDiv);
+
+      const optionsDiv = document.createElement('div');
+      optionsDiv.className = 'space-y-2';
+      
+      question.options.forEach((option, index) => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-option flex items-center p-3 rounded-xl';
+        label.style.backgroundColor = '#f7fafc';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'mr-3';
+        checkbox.value = index;
+        
+        const text = document.createElement('span');
+        text.className = 'text-base';
+        text.style.color = '#2d3748';
+        text.innerHTML = option;
+        
+        label.appendChild(checkbox);
+        label.appendChild(text);
+        optionsDiv.appendChild(label);
+      });
+      
+      container.appendChild(optionsDiv);
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.onclick = () => checkMCMA(question);
+    }
+
+    // Render Fill Blank
+    function renderFillBlank(question, container) {
+      const inputDiv = document.createElement('div');
+      inputDiv.className = 'mb-3';
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'fillBlankInput';
+      input.className = 'w-full p-3 text-base border-2 rounded-xl focus:outline-none focus:border-purple-500';
+      input.style.borderColor = '#cbd5e0';
+      input.placeholder = 'Ketik jawaban kamu...';
+      input.setAttribute('readonly', 'true');
+      
+      inputDiv.appendChild(input);
+      container.appendChild(inputDiv);
+
+      // Add virtual keyboard for fill blank
+      const keyboardDiv = document.createElement('div');
+      keyboardDiv.className = 'virtual-keyboard';
+      keyboardDiv.id = 'fillBlankKeyboard';
+      keyboardDiv.innerHTML = `
+        <button type="button" class="keyboard-key" data-key="a">a</button>
+        <button type="button" class="keyboard-key" data-key="b">b</button>
+        <button type="button" class="keyboard-key" data-key="c">c</button>
+        <button type="button" class="keyboard-key" data-key="d">d</button>
+        <button type="button" class="keyboard-key" data-key="e">e</button>
+        <button type="button" class="keyboard-key" data-key="f">f</button>
+        <button type="button" class="keyboard-key" data-key="g">g</button>
+        <button type="button" class="keyboard-key" data-key="h">h</button>
+        <button type="button" class="keyboard-key" data-key="i">i</button>
+        <button type="button" class="keyboard-key" data-key="j">j</button>
+        
+        <button type="button" class="keyboard-key" data-key="k">k</button>
+        <button type="button" class="keyboard-key" data-key="l">l</button>
+        <button type="button" class="keyboard-key" data-key="m">m</button>
+        <button type="button" class="keyboard-key" data-key="n">n</button>
+        <button type="button" class="keyboard-key" data-key="o">o</button>
+        <button type="button" class="keyboard-key" data-key="p">p</button>
+        <button type="button" class="keyboard-key" data-key="q">q</button>
+        <button type="button" class="keyboard-key" data-key="r">r</button>
+        <button type="button" class="keyboard-key" data-key="s">s</button>
+        <button type="button" class="keyboard-key" data-key="t">t</button>
+        
+        <button type="button" class="keyboard-key" data-key="u">u</button>
+        <button type="button" class="keyboard-key" data-key="v">v</button>
+        <button type="button" class="keyboard-key" data-key="w">w</button>
+        <button type="button" class="keyboard-key" data-key="x">x</button>
+        <button type="button" class="keyboard-key" data-key="y">y</button>
+        <button type="button" class="keyboard-key" data-key="z">z</button>
+        <button type="button" class="keyboard-key key-space" data-key=" ">SPASI</button>
+        <button type="button" class="keyboard-key key-backspace" data-key="BACKSPACE">⌫ HAPUS</button>
+        <button type="button" class="keyboard-key key-clear" data-key="CLEAR">🗑️ BERSIHKAN</button>
+      `;
+      container.appendChild(keyboardDiv);
+
+      // Add keyboard event listener
+      keyboardDiv.addEventListener('click', (e) => {
+        if (e.target.classList.contains('keyboard-key')) {
+          playSound('click');
+          const key = e.target.dataset.key;
+          
+          if (key === 'BACKSPACE') {
+            input.value = input.value.slice(0, -1);
+          } else if (key === 'CLEAR') {
+            input.value = '';
+          } else {
+            input.value += key;
+          }
+        }
+      });
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.onclick = () => checkFillBlank(question);
+    }
+
+    // Render True/False
+    function renderTrueFalse(question, container) {
+      const optionsDiv = document.createElement('div');
+      optionsDiv.className = 'grid grid-cols-2 gap-3';
+      
+      const trueBtn = document.createElement('button');
+      trueBtn.className = 'p-6 rounded-xl text-xl font-bold transition-all duration-300 hover:shadow-lg';
+      trueBtn.style.backgroundColor = '#f7fafc';
+      trueBtn.style.color = '#2d3748';
+      trueBtn.innerHTML = '&#x2705; BENAR';
+      trueBtn.onclick = () => checkTrueFalse(true, question);
+      
+      const falseBtn = document.createElement('button');
+      falseBtn.className = 'p-6 rounded-xl text-xl font-bold transition-all duration-300 hover:shadow-lg';
+      falseBtn.style.backgroundColor = '#f7fafc';
+      falseBtn.style.color = '#2d3748';
+      falseBtn.innerHTML = '&#x274C; SALAH';
+      falseBtn.onclick = () => checkTrueFalse(false, question);
+      
+      optionsDiv.appendChild(trueBtn);
+      optionsDiv.appendChild(falseBtn);
+      container.appendChild(optionsDiv);
+    }
+
+    // Render Matching
+    let matchingConnections = {};
+    let currentMatchingLine = null;
+
+    function renderMatching(question, container) {
+      matchingConnections = {};
+
+      const instructionDiv = document.createElement('div');
+      instructionDiv.className = 'mb-4 p-3 rounded-xl';
+      instructionDiv.style.background = 'linear-gradient(135deg, #FFE5E5 0%, #E0F7FA 100%)';
+      instructionDiv.innerHTML = '<p class="text-xs font-semibold" style="color: #FF6B6B;">Klik item di sebelah kiri, lalu klik pasangan yang sesuai di sebelah kanan</p>';
+      container.appendChild(instructionDiv);
+
+      const canvasContainer = document.createElement('div');
+      canvasContainer.style.position = 'relative';
+
+      const canvas = document.createElement('canvas');
+      canvas.id = 'matchingCanvas';
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '1';
+      canvasContainer.appendChild(canvas);
+
+      const matchingDiv = document.createElement('div');
+      matchingDiv.className = 'grid grid-cols-2 gap-6';
+      matchingDiv.style.position = 'relative';
+      matchingDiv.style.zIndex = '2';
+
+      // Prepare right items: correct answers + distractors
+      const allRightItems = [
+        ...question.pairs.map((pair, index) => ({text: pair.right, originalIndex: index, isDistractor: false})),
+        ...question.distractors.map(d => ({text: d, originalIndex: -1, isDistractor: true}))
+      ];
+
+      // Shuffle right side
+      const rightItems = shuffleArray(allRightItems);
+
+      // Left side
+      const leftDiv = document.createElement('div');
+      leftDiv.className = 'space-y-2';
+      question.pairs.forEach((pair, index) => {
+        const item = document.createElement('div');
+        item.className = 'matching-left-item p-3 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300';
+        item.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)';
+        item.style.color = '#ffffff';
+        item.innerHTML = pair.left;
+        item.dataset.index = index;
+        item.onclick = () => selectLeftItem(item, index);
+        leftDiv.appendChild(item);
+      });
+
+      // Right side
+      const rightDiv = document.createElement('div');
+      rightDiv.className = 'space-y-2';
+      rightItems.forEach((item, index) => {
+        const rightItem = document.createElement('div');
+        rightItem.className = 'matching-right-item p-3 rounded-xl border-2 text-sm font-semibold cursor-pointer transition-all duration-300';
+        rightItem.style.backgroundColor = '#f7fafc';
+        rightItem.style.borderColor = '#cbd5e0';
+        rightItem.style.color = '#4a5568';
+        rightItem.innerHTML = item.text;
+        rightItem.dataset.correctIndex = item.originalIndex;
+        rightItem.dataset.rightIndex = index;
+        rightItem.dataset.isDistractor = item.isDistractor;
+        rightItem.onclick = () => selectRightItem(rightItem, index);
+        rightDiv.appendChild(rightItem);
+      });
+
+      matchingDiv.appendChild(leftDiv);
+      matchingDiv.appendChild(rightDiv);
+      canvasContainer.appendChild(matchingDiv);
+      container.appendChild(canvasContainer);
+
+      // Set canvas size
+      setTimeout(() => {
+        canvas.width = matchingDiv.offsetWidth;
+        canvas.height = matchingDiv.offsetHeight;
+        drawLines();
+      }, 100);
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.onclick = () => checkMatching(question);
+    }
+
+    let selectedLeft = null;
+
+    function selectLeftItem(element, index) {
+      playSound('click');
+      // Clear previous selection
+      document.querySelectorAll('.matching-left-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      selectedLeft = index;
+      element.classList.add('selected');
+    }
+
+    function selectRightItem(element, rightIndex) {
+      if (selectedLeft === null) {
+        playSound('wrong');
+        // Show message to select left first
+        element.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          element.style.animation = '';
+        }, 500);
+        return;
+      }
+
+      playSound('click');
+      // Create or update connection
+      matchingConnections[selectedLeft] = {
+        rightIndex: rightIndex,
+        correctIndex: element.dataset.correctIndex,
+        isDistractor: element.dataset.isDistractor === 'true'
+      };
+
+      // Clear left selection
+      document.querySelectorAll('.matching-left-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      selectedLeft = null;
+
+      // Redraw lines
+      drawLines();
+    }
+
+    function drawLines() {
+      const canvas = document.getElementById('matchingCanvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const leftItems = document.querySelectorAll('.matching-left-item');
+      const rightItems = document.querySelectorAll('.matching-right-item');
+
+      Object.keys(matchingConnections).forEach(leftIndex => {
+        const connection = matchingConnections[leftIndex];
+        const leftItem = leftItems[leftIndex];
+        const rightItem = Array.from(rightItems).find(item => item.dataset.rightIndex == connection.rightIndex);
+
+        if (leftItem && rightItem) {
+          const leftRect = leftItem.getBoundingClientRect();
+          const rightRect = rightItem.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+
+          const startX = leftRect.right - canvasRect.left;
+          const startY = leftRect.top + leftRect.height / 2 - canvasRect.top;
+          const endX = rightRect.left - canvasRect.left;
+          const endY = rightRect.top + rightRect.height / 2 - canvasRect.top;
+
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.strokeStyle = '#4ECDC4';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Draw circles at endpoints
+          ctx.beginPath();
+          ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
+          ctx.fillStyle = '#4ECDC4';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(endX, endY, 6, 0, 2 * Math.PI);
+          ctx.fillStyle = '#4ECDC4';
+          ctx.fill();
+        }
+      });
+    }
+
+    // Check answers
+    function checkMultipleChoice(selectedIndex, question) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      clearInterval(timerInterval);
+
+      const isCorrect = selectedIndex === question.correct;
+      
+      if (isCorrect) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+
+      processAnswer(isCorrect, question);
+
+      const buttons = document.getElementById('contentArea').querySelectorAll('button');
+      
+      if (isCorrect) {
+        buttons[selectedIndex].classList.add('animate-correct');
+        buttons[selectedIndex].style.backgroundColor = '#48bb78';
+        buttons[selectedIndex].style.color = '#ffffff';
+      } else {
+        buttons[selectedIndex].classList.add('animate-wrong');
+        buttons[selectedIndex].style.backgroundColor = '#f56565';
+        buttons[selectedIndex].style.color = '#ffffff';
+        buttons[question.correct].style.backgroundColor = '#48bb78';
+        buttons[question.correct].style.color = '#ffffff';
+      }
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        startQuestion();
+      }, 3500);
+    }
+
+    function checkMCMA(question) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      clearInterval(timerInterval);
+
+      const checkboxes = document.querySelectorAll('#contentArea input[type="checkbox"]');
+      const selectedIndices = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => parseInt(cb.value));
+
+      const isCorrect = selectedIndices.length === question.correct.length &&
+        selectedIndices.every(i => question.correct.includes(i));
+
+      if (isCorrect) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+
+      processAnswer(isCorrect, question);
+
+      checkboxes.forEach((cb, index) => {
+        const label = cb.parentElement;
+        if (question.correct.includes(index)) {
+          label.style.backgroundColor = '#48bb78';
+          label.style.color = '#ffffff';
+        } else if (selectedIndices.includes(index)) {
+          label.style.backgroundColor = '#f56565';
+          label.style.color = '#ffffff';
+        }
+      });
+
+      document.getElementById('submitBtn').disabled = true;
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        startQuestion();
+      }, 3500);
+    }
+
+    function checkFillBlank(question) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      clearInterval(timerInterval);
+
+      const input = document.getElementById('fillBlankInput');
+      const userAnswer = input.value.trim().toLowerCase();
+      
+      const isCorrect = question.answer.some(ans => 
+        userAnswer === ans.toLowerCase() || userAnswer.includes(ans.toLowerCase())
+      );
+
+      if (isCorrect) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+
+      processAnswer(isCorrect, question);
+
+      if (isCorrect) {
+        input.style.borderColor = '#48bb78';
+        input.style.backgroundColor = '#c6f6d5';
+      } else {
+        input.style.borderColor = '#f56565';
+        input.style.backgroundColor = '#fed7d7';
+      }
+
+      input.disabled = true;
+      document.getElementById('submitBtn').disabled = true;
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        startQuestion();
+      }, 3500);
+    }
+
+    function checkTrueFalse(selectedAnswer, question) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      clearInterval(timerInterval);
+
+      const isCorrect = selectedAnswer === question.answer;
+
+      if (isCorrect) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+
+      processAnswer(isCorrect, question);
+
+      const buttons = document.getElementById('contentArea').querySelectorAll('button');
+      const trueBtn = buttons[0];
+      const falseBtn = buttons[1];
+
+      if (isCorrect) {
+        if (selectedAnswer) {
+          trueBtn.classList.add('animate-correct');
+          trueBtn.style.backgroundColor = '#48bb78';
+        } else {
+          falseBtn.classList.add('animate-correct');
+          falseBtn.style.backgroundColor = '#48bb78';
+        }
+      } else {
+        if (selectedAnswer) {
+          trueBtn.classList.add('animate-wrong');
+          trueBtn.style.backgroundColor = '#f56565';
+          falseBtn.style.backgroundColor = '#48bb78';
+        } else {
+          falseBtn.classList.add('animate-wrong');
+          falseBtn.style.backgroundColor = '#f56565';
+          trueBtn.style.backgroundColor = '#48bb78';
+        }
+      }
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        startQuestion();
+      }, 3500);
+    }
+
+    function checkMatching(question) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      clearInterval(timerInterval);
+
+      let correctMatches = 0;
+
+      // Check each connection
+      Object.keys(matchingConnections).forEach(leftIndex => {
+        const connection = matchingConnections[leftIndex];
+        const leftIndexNum = parseInt(leftIndex);
+        const correctIndexNum = parseInt(connection.correctIndex);
+        
+        if (!connection.isDistractor && leftIndexNum === correctIndexNum) {
+          correctMatches++;
+        }
+      });
+
+      const isCorrect = correctMatches === question.pairs.length;
+
+      if (isCorrect) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+
+      // Redraw lines with colors
+      const canvas = document.getElementById('matchingCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const leftItems = document.querySelectorAll('.matching-left-item');
+      const rightItems = document.querySelectorAll('.matching-right-item');
+
+      Object.keys(matchingConnections).forEach(leftIndex => {
+        const connection = matchingConnections[leftIndex];
+        const leftItem = leftItems[leftIndex];
+        const rightItem = Array.from(rightItems).find(item => item.dataset.rightIndex == connection.rightIndex);
+        const leftIndexNum = parseInt(leftIndex);
+        const correctIndexNum = parseInt(connection.correctIndex);
+        const isCorrectMatch = !connection.isDistractor && leftIndexNum === correctIndexNum;
+
+        if (leftItem && rightItem) {
+          const leftRect = leftItem.getBoundingClientRect();
+          const rightRect = rightItem.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+
+          const startX = leftRect.right - canvasRect.left;
+          const startY = leftRect.top + leftRect.height / 2 - canvasRect.top;
+          const endX = rightRect.left - canvasRect.left;
+          const endY = rightRect.top + rightRect.height / 2 - canvasRect.top;
+
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.strokeStyle = isCorrectMatch ? '#48bb78' : '#f56565';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Draw circles at endpoints
+          ctx.beginPath();
+          ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
+          ctx.fillStyle = isCorrectMatch ? '#48bb78' : '#f56565';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(endX, endY, 6, 0, 2 * Math.PI);
+          ctx.fillStyle = isCorrectMatch ? '#48bb78' : '#f56565';
+          ctx.fill();
+
+          // Highlight items
+          if (isCorrectMatch) {
+            leftItem.style.backgroundColor = '#48bb78';
+            rightItem.style.backgroundColor = '#c6f6d5';
+            rightItem.style.borderColor = '#48bb78';
+          } else {
+            leftItem.style.backgroundColor = '#f56565';
+            rightItem.style.backgroundColor = '#fed7d7';
+            rightItem.style.borderColor = '#f56565';
+          }
+        }
+      });
+
+      processAnswer(isCorrect, question);
+
+      document.getElementById('submitBtn').disabled = true;
+
+      setTimeout(() => {
+        currentQuestionIndex++;
+        startQuestion();
+      }, 4000);
+    }
+
+    // Process answer
+    function processAnswer(isCorrect, question) {
+      const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000);
+      totalTime += timeTaken;
+
+      if (isCorrect) {
+        correctAnswers++;
+        const questionScore = 10; // Each correct answer = 10 points (10 questions x 10 = 100 max)
+        score += questionScore;
+        
+        showFeedback(true, question.explanation);
+      } else {
+        showFeedback(false, question.explanation);
+      }
+
+      document.getElementById('scoreDisplay').textContent = score;
+    }
+
+    // Update timer
+    function updateTimer(maxTime) {
+      timeLeft--;
+      document.getElementById('timer').textContent = timeLeft;
+      const percentage = (timeLeft / maxTime) * 100;
+      document.getElementById('timerBar').style.width = percentage + '%';
+
+      if (timeLeft <= 5) {
+        document.getElementById('timerBar').classList.add('timer-warning');
+        playSound('tick');
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        if (!isAnswered) {
+          autoSubmitAnswer();
+        }
+      }
+    }
+
+    // Auto submit when time's up
+    function autoSubmitAnswer() {
+      if (isAnswered) return; // Prevent double submission
+      
+      const question = selectedQuestions[currentQuestionIndex];
+      isAnswered = true;
+      
+      playSound('wrong');
+      
+      // Show Game Over modal
+      const modal = document.getElementById('gameOverModal');
+      modal.classList.remove('hidden');
+      
+      // Mark answer as wrong
+      processAnswer(false, question);
+      
+      // Show correct answers visually
+      switch(question.type) {
+        case 'multipleChoice':
+          const buttons = document.getElementById('contentArea').querySelectorAll('button');
+          if (buttons[question.correct]) {
+            buttons[question.correct].style.backgroundColor = '#48bb78';
+            buttons[question.correct].style.color = '#ffffff';
+          }
+          break;
+        case 'mcma':
+          const checkboxes = document.querySelectorAll('#contentArea input[type="checkbox"]');
+          checkboxes.forEach((cb, index) => {
+            const label = cb.parentElement;
+            if (question.correct.includes(index)) {
+              label.style.backgroundColor = '#48bb78';
+              label.style.color = '#ffffff';
+            }
+          });
+          break;
+        case 'trueFalse':
+          const tfButtons = document.getElementById('contentArea').querySelectorAll('button');
+          const correctBtn = question.answer ? tfButtons[0] : tfButtons[1];
+          if (correctBtn) {
+            correctBtn.style.backgroundColor = '#48bb78';
+          }
+          break;
+        case 'matching':
+          // Show correct matching lines
+          const canvas = document.getElementById('matchingCanvas');
+          if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const leftItems = document.querySelectorAll('.matching-left-item');
+            const rightItems = document.querySelectorAll('.matching-right-item');
+            
+            question.pairs.forEach((pair, index) => {
+              const leftItem = leftItems[index];
+              const rightItem = Array.from(rightItems).find(item => item.dataset.correctIndex == index);
+              
+              if (leftItem && rightItem) {
+                const leftRect = leftItem.getBoundingClientRect();
+                const rightRect = rightItem.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const startX = leftRect.right - canvasRect.left;
+                const startY = leftRect.top + leftRect.height / 2 - canvasRect.top;
+                const endX = rightRect.left - canvasRect.left;
+                const endY = rightRect.top + rightRect.height / 2 - canvasRect.top;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = '#48bb78';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(startX, startY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = '#48bb78';
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(endX, endY, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = '#48bb78';
+                ctx.fill();
+                
+                leftItem.style.backgroundColor = '#48bb78';
+                rightItem.style.backgroundColor = '#c6f6d5';
+                rightItem.style.borderColor = '#48bb78';
+              }
+            });
+          }
+          break;
+      }
+    }
+
+    // Continue button on Game Over modal
+    document.getElementById('continueBtn').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('gameOverModal').classList.add('hidden');
+      currentQuestionIndex++;
+      startQuestion();
+    });
+
+    // Show feedback
+    function showFeedback(isCorrect, explanation) {
+      const feedback = document.getElementById('feedback');
+      const feedbackTitle = document.getElementById('feedbackTitle');
+      const feedbackText = document.getElementById('feedbackText');
+
+      feedback.classList.remove('hidden');
+      feedback.classList.add('animate-slide-up');
+
+      if (isCorrect) {
+        feedback.style.backgroundColor = '#c6f6d5';
+        feedbackTitle.innerHTML = '&#x2705; Benar!';
+        feedbackTitle.style.color = '#22543d';
+        feedbackText.style.color = '#22543d';
+      } else {
+        feedback.style.backgroundColor = '#fed7d7';
+        feedbackTitle.innerHTML = '&#x274C; Kurang Tepat';
+        feedbackTitle.style.color = '#742a2a';
+        feedbackText.style.color = '#742a2a';
+      }
+
+      feedbackText.innerHTML = explanation;
+    }
+
+    // End game
+    function endGame() {
+      playSound('finish');
+      
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('resultsScreen').classList.remove('hidden');
+
+      const accuracy = Math.round((correctAnswers / selectedQuestions.length) * 100);
+      const avgTime = Math.round(totalTime / selectedQuestions.length);
+
+      document.getElementById('finalPlayerName').textContent = currentPlayer;
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('finalAccuracy').textContent = accuracy + '%';
+      document.getElementById('finalAvgTime').textContent = avgTime + 's';
+
+      if (accuracy >= 80) {
+        document.getElementById('resultEmoji').textContent = '🏆';
+      } else if (accuracy >= 60) {
+        document.getElementById('resultEmoji').textContent = '⭐';
+      } else {
+        document.getElementById('resultEmoji').textContent = '💪';
+      }
+
+      // Save to localStorage
+      saveToLeaderboard({
+        player_name: currentPlayer,
+        score: score,
+        accuracy: accuracy,
+        avg_time: avgTime,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // LocalStorage functions
+    function saveToLeaderboard(entry) {
+      let leaderboard = JSON.parse(localStorage.getItem('quizLeaderboard') || '[]');
+      leaderboard.push(entry);
+      leaderboard.sort((a, b) => b.score - a.score);
+      leaderboard = leaderboard.slice(0, 10); // Keep top 10
+      localStorage.setItem('quizLeaderboard', JSON.stringify(leaderboard));
+    }
+
+    function getLeaderboard() {
+      return JSON.parse(localStorage.getItem('quizLeaderboard') || '[]');
+    }
+
+    // View leaderboard
+    document.getElementById('viewLeaderboardBtn').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('resultsScreen').classList.add('hidden');
+      document.getElementById('leaderboardScreen').classList.remove('hidden');
+      displayLeaderboard();
+    });
+
+    // Display leaderboard
+    function displayLeaderboard() {
+      const leaderboardList = document.getElementById('leaderboardList');
+      leaderboardList.innerHTML = '';
+      
+      const leaderboard = getLeaderboard();
+
+      if (leaderboard.length === 0) {
+        leaderboardList.innerHTML = '<p class="text-center text-lg" style="color: #718096;">Belum ada data leaderboard</p>';
+        return;
+      }
+
+      leaderboard.forEach((entry, index) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-6 rounded-2xl animate-slide-up';
+        item.style.backgroundColor = '#f7fafc';
+        item.style.animationDelay = `${index * 0.1}s`;
+
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-4">
+            <span class="text-3xl font-bold" style="color: #FF6B6B;">${medal}</span>
+            <div>
+              <p class="text-xl font-bold" style="color: #2d3748;">${entry.player_name}</p>
+              <p class="text-sm" style="color: #718096;">Akurasi: ${entry.accuracy}% • Waktu: ${entry.avg_time}s</p>
+            </div>
+          </div>
+          <p class="text-2xl font-bold" style="color: #4ECDC4;">${entry.score}</p>
+        `;
+
+        leaderboardList.appendChild(item);
+      });
+    }
+
+    // Back to results
+    document.getElementById('backToResultsBtn').addEventListener('click', () => {
+      playSound('click');
+      document.getElementById('leaderboardScreen').classList.add('hidden');
+      document.getElementById('resultsScreen').classList.remove('hidden');
+    });
+
+    // Play again
+    document.getElementById('playAgainBtn').addEventListener('click', () => {
+      playSound('click');
+      currentQuestionIndex = 0;
+      score = 0;
+      correctAnswers = 0;
+      totalTime = 0;
+      
+      document.getElementById('resultsScreen').classList.add('hidden');
+      document.getElementById('introScreen').classList.remove('hidden');
+      document.getElementById('playerName').value = '';
+      document.getElementById('scoreDisplay').textContent = '0';
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9baa07f9a0b6e9cd',t:'MTc2Nzg1Nzg2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
